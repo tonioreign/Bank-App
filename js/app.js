@@ -163,8 +163,34 @@ const updateUI = acc => {
   calcDisplaySummary(acc);
 };
 
+const startLogOutTimer = () => {
+  const tick = () => {
+    const min = String(Math.floor(time / 60)).padStart(2, 0);
+    const sec = String(Math.floor(time % 60)).padStart(2, 0);
+    // In each call back call print the remaining time
+    labelTimer.textContent = `${min}:${sec}`;
+
+    //When 0 log out user & stop timer
+    if (time === 0) {
+      clearInterval(timer);
+      containerApp.style.opacity = 0;
+      labelWelcome.textContent = 'Login to get started';
+    }
+
+    //Decrease 1 second
+    time--;
+  };
+  // Set time to 5 minutes
+  let time = 300;
+  // Call the timer every second
+  tick();
+  const timer = setInterval(tick, 1000);
+
+  return timer;
+};
+
 //EVENT HANDLERS
-let currentAccount;
+let currentAccount, timer;
 
 // //FAKE ALWAYS LOGGED IN
 // currentAccount = account1;
@@ -198,6 +224,8 @@ btnLogin.addEventListener('click', e => {
     //Clear input fields
     inputLoginUsername.value = inputLoginPin.value = ' ';
     inputLoginPin.blur();
+    if (timer) clearInterval(timer);
+    timer = startLogOutTimer();
 
     updateUI(currentAccount);
   }
@@ -231,6 +259,10 @@ btnTransfer.addEventListener('click', e => {
 
     // Update UI
     updateUI(currentAccount);
+
+    // Reset Timer
+    clearInterval(timer);
+    timer = startLogOutTimer();
   }
 });
 
@@ -261,15 +293,20 @@ btnLoan.addEventListener('click', e => {
   const amount = Math.floor(inputLoanAmount.value);
 
   if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
-    //Add movement
-    currentAccount.movements.push(amount.toFixed(2));
+    setTimeout(function () {
+      currentAccount.movements.push(amount.toFixed(2));
 
-    currentAccount.movementsDates.push(new Date().toISOString());
+      currentAccount.movementsDates.push(new Date().toISOString());
 
-    //Update UI
-    updateUI(currentAccount);
+      //Update UI
+      updateUI(currentAccount);
 
-    inputLoanAmount.value = '';
+      inputLoanAmount.value = '';
+
+      // Reset Timer
+      clearInterval(timer);
+      timer = startLogOutTimer();
+    }, 2500);
   }
 });
 let sorted = false;
